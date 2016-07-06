@@ -5,28 +5,24 @@
 # emissions from 1999–2008? Use the ggplot2 plotting system to make a plot
 # answer this question.
 
+library(plyr)
 library(ggplot2)
 
 # Read the data file
 ## This first line will likely take a few seconds. Be patient!
-NEI <- readRDS("data/summarySCC_PM25.rds")
-SCC <- readRDS("data/Source_Classification_Code.rds")
+NEI <- readRDS("./data/summarySCC_PM25.rds")
+SCC <- readRDS("./data/Source_Classification_Code.rds")
 
 BaltimoreCity <- subset(NEI, fips == "24510")
 
-# Aggregate using sum the Baltimore emissions data by year
-aggTotalsBaltimore <- aggregate(Emissions ~ year, BaltimoreCity ,sum)
 
-png("plot3.png",width=480,height=480,units="px")
+PM25YearType <- ddply(BaltimoreCity, .(year, type), function(x) sum(x$Emissions))
+colnames(PM25YearType)[3] <- "Emissions"
 
-
-ggp <- ggplot(BaltimoreCity,aes(factor(year),Emissions,fill=type)) +
-  geom_bar(stat="identity") +
-  theme_bw() + guides(fill=FALSE)+
-  facet_grid(.~type,scales = "free",space="free") + 
-  labs(x="year", y=expression("Total PM"[2.5]*" Emission (Tons)")) + 
-  labs(title=expression("PM"[2.5]*" Emissions, Baltimore City 1999-2008 by Source Type"))
-
-print(ggp)
-
+png("plot3.png")
+qplot(year, Emissions, data=PM25YearType, color=type, geom="line") +
+  ggtitle(expression("Baltimore City" ~ PM[2.5] ~ "Emissions Type & Year")) +
+  xlab("Year") +
+  ylab(expression("Total" ~ PM[2.5] ~ "Emissions (tons)"))
 dev.off()
+
